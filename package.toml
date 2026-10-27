@@ -1,0 +1,7 @@
+[package]
+version = "0.1.0"
+name = { en = "Web image search", zh = "网络搜图" }
+summary = { en = "Search the web for images into your Pictures, and let the AI see them", zh = "上网搜图，存进图片目录，AI 能直接看" }
+author = "SHORiN-KiWATA"
+icon = "images"
+needs = ["images"]
