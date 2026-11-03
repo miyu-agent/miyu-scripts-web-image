@@ -237,7 +237,7 @@ def providers_for(query, safe):
 # --------------------------------------------------------------------------
 
 def cooldown_path():
-    base = os.environ.get("MIYU_SCRIPT_CACHE_DIR")
+    base = os.environ.get("MIYU_CACHE_DIR")
     return os.path.join(base, "cooldowns.json") if base else None
 
 
@@ -488,9 +488,9 @@ def main():
 
     # 本机会话给用户的图片目录，存了就是人的；群里这类会话没有，退回缓存、只留最近几次
     pictures = os.environ.get("MIYU_PICTURES_DIR")
-    base = pictures or os.environ.get("MIYU_SCRIPT_CACHE_DIR")
+    base = pictures or os.environ.get("MIYU_CACHE_DIR")
     if not base:
-        fail("没有图片目录也没有脚本缓存目录（MIYU_PICTURES_DIR、MIYU_SCRIPT_CACHE_DIR），要在 Miyu 里调")
+        fail("没有图片目录也没有脚本缓存目录（MIYU_PICTURES_DIR、MIYU_CACHE_DIR），要在 Miyu 里调")
     root = os.path.join(base, "网络搜图" if pictures else "images")
     folder = os.path.join(root, f"{slug(query)}-{time.strftime('%Y%m%d-%H%M%S')}")
     try:
@@ -499,7 +499,7 @@ def main():
         fail(f"建不了 {folder}：{exc}")
     if not pictures:
         prune(root, keep=KEEP_SEARCHES)
-    attach_dir = os.environ.get("MIYU_SCRIPT_IMAGES_DIR")
+    attach_dir = os.environ.get("MIYU_IMAGES_DIR")
     attached = []
     lines = []
     for index, (c, (data, mime, w, h, used_thumb)) in enumerate(results, 1):
