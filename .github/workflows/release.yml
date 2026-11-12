@@ -8,4 +8,4 @@ jobs:
     permissions:
       contents: write
     with:
-      package: miyu-scripts-web-image
+      package: web-image
