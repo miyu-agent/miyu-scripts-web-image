@@ -13,6 +13,7 @@ import json
 import os
 import pathlib
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -73,6 +74,12 @@ class Sandbox(unittest.TestCase):
                 code = exc.code or 0
         return code, out.getvalue()
 
+    def run_script(self, stdin_text):
+        """另起进程跑脚本，返回 (退出码, stdout+stderr)，用来看有没有 traceback。"""
+        proc = subprocess.run([sys.executable, "-I", "-B", str(SCRIPT)], input=stdin_text,
+                              capture_output=True, text=True, timeout=10, env=dict(os.environ))
+        return proc.returncode, proc.stdout + proc.stderr
+
 
 class Sniff(Sandbox):
     # 审计 #173-d：JPEG 规范允许段标记前有任意个 0xFF 填充字节。sniff() 在 0xFF 后直接把下一字节当标记，
@@ -85,6 +92,19 @@ class Sniff(Sandbox):
     def test_jpeg_without_fill_byte(self):
         data = b"\xff\xd8" + b"\xff\xc0" + SOF0 + b"\xff\xd9"
         self.assertEqual(self.mod.sniff(data), ("image/jpeg", 100, 200))
+
+
+class TopLevelType(Sandbox):
+    # 审计 #176：main() 只接 JSONDecodeError，不查顶层是不是对象；
+    # 喂 [] 或 null 直接 args.get → AttributeError，打 traceback。应像 calculator 那样友好报错、退出码 1。
+    # 参数检查在联网之前，另起的进程不联网。
+    def test_non_object_args_friendly_error(self):
+        for raw in ("[]", "null"):
+            with self.subTest(stdin=raw):
+                code, out = self.run_script(raw)
+                self.assertEqual(code, 1, out)
+                self.assertIn("参数要是一个 JSON 对象", out)
+                self.assertNotIn("Traceback", out)
 
 
 if __name__ == "__main__":
